@@ -1,32 +1,41 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
+const { Server } = require("socket.io");
+const http = require("http");
 
 const app = express();
-app.use(cors());
-
 const server = http.createServer(app);
+
+// CORS setup
+app.use(cors());
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // your frontend port
-    methods: ['GET', 'POST']
-  }
+    origin: "*", // Allow all for testing; tighten in production
+    methods: ["GET", "POST"],
+  },
 });
 
-io.on('connection', socket => {
-  console.log('User connected:', socket.id);
+// Example socket event
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  socket.on('send_message', data => {
-    socket.broadcast.emit('receive_message', data);
+  socket.on("send-message", (msg) => {
+    socket.broadcast.emit("receive-message", msg);
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
-server.listen(5000, () => {
-  console.log('Server running on http://localhost:5000');
+// ✅ Use dynamic port for Render
+const PORT = process.env.PORT || 5000;
+
+app.get("/", (req, res) => {
+  res.send("MSGIFY backend is running 🚀");
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
