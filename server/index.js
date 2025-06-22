@@ -1,24 +1,22 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const http = require("http");
 
 const app = express();
 const server = http.createServer(app);
 
-// CORS setup
 app.use(cors());
 
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all for testing; tighten in production
-    methods: ["GET", "POST"],
-  },
+    origin: "*", // Allow all for now; tighten for production
+    methods: ["GET", "POST"]
+  }
 });
 
-// Example socket event
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("New user connected:", socket.id);
 
   socket.on("send-message", (msg) => {
     socket.broadcast.emit("receive-message", msg);
@@ -29,7 +27,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Use dynamic port for Render
+// ✅ THIS IS REQUIRED FOR RENDER TO BIND THE RIGHT PORT
 const PORT = process.env.PORT || 5000;
 
 app.get("/", (req, res) => {
