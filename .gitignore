@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # dependencies
 node_modules/
 
@@ -19,3 +20,14 @@ yarn-error.log*
 # system files
 .DS_Store
 Thumbs.db
+=======
+# Ignore node_modules
+client/node_modules/
+server/node_modules/
+
+# Vite, build and logs
+dist/
+build/
+.env
+*.log
+>>>>>>> f9e28c949e57abe1706d4017341ce4db8834733b
