@@ -1,17 +1,19 @@
-// client/src/firebase.js
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage'; 
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyA5lqm03AEMBO_G_mJaEtMJPp326T733ys",
+  authDomain: "msgify-d6389.firebaseapp.com",
+  projectId: "msgify-d6389",
+  storageBucket: "msgify-d6389.firebasestorage.app",
+  messagingSenderId: "245561476588",
+  appId: "1:245561476588:web:0d2a0e941f8c0342632cc9"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-export { db };
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app); 
