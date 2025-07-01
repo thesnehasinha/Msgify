@@ -1,117 +1,81 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import socket from '../socket';
+// ChatPage.jsx — Updated Design
+import React, { useState } from 'react';
+import { useUser } from '../context/UserContext';
+import { useContacts } from '../context/ContactsContext';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
+import ChatRoom from '../components/ChatRoom';
+import { Menu } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const dummyUsers = ['Alice', 'Bob', 'Charlie', 'Sneha'];
-
-function ChatPage() {
-  const location = useLocation();
-  const currentUser = location.state?.username || 'You';
-
-  const [selectedUser, setSelectedUser] = useState(dummyUsers[0]);
-  const [message, setMessage] = useState('');
-  const [chatLog, setChatLog] = useState({});
-
-  // Receive message from others
-  useEffect(() => {
-    socket.on('receive_message', data => {
-      const { to, from, text, time } = data;
-
-      // Show only messages sent *to* the current user
-      if (to === currentUser) {
-        setChatLog(prev => ({
-          ...prev,
-          [from]: [...(prev[from] || []), { sender: from, text, time }]
-        }));
-      }
-    });
-
-    return () => socket.off('receive_message');
-  }, [currentUser]);
-
-  // Send message
-  const sendMessage = () => {
-    if (message.trim() === '') return;
-
-    const msgObj = {
-      from: currentUser,
-      to: selectedUser,
-      text: message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    // Show it in own chat
-    setChatLog(prev => ({
-      ...prev,
-      [selectedUser]: [...(prev[selectedUser] || []), { sender: currentUser, text: message, time: msgObj.time }]
-    }));
-
-    socket.emit('send_message', msgObj);
-    setMessage('');
-  };
+export default function ChatPage() {
+  const { user } = useUser();
+  const { contacts } = useContacts();
+  const { theme } = useTheme();
+  const [activeChat, setActiveChat] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Arial' }}>
-      {/* Sidebar */}
-      <div style={{ width: '20%', background: '#282c34', color: '#fff', padding: '1rem' }}>
-        <h3 style={{ color: '#61dafb' }}>Users</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {dummyUsers
-            .filter(user => user !== currentUser)
-            .map(user => (
-              <li
-                key={user}
-                onClick={() => setSelectedUser(user)}
-                style={{
-                  padding: '10px',
-                  cursor: 'pointer',
-                  backgroundColor: selectedUser === user ? '#444' : 'transparent',
-                  borderRadius: '5px',
-                  marginBottom: '5px'
-                }}
-              >
-                {user}
-              </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Chat Area */}
-      <div style={{ flex: 1, padding: '1rem', background: '#f9f9f9' }}>
-        <h2>Welcome, {currentUser}</h2>
-        <h3>Chatting with {selectedUser}</h3>
-
-        <div style={{
-          height: '70vh',
-          overflowY: 'auto',
-          border: '1px solid #ccc',
-          padding: '1rem',
-          background: '#fff',
-          marginBottom: '1rem',
-          borderRadius: '6px'
-        }}>
-          {(chatLog[selectedUser] || []).map((msg, idx) => (
-            <div key={idx} style={{ marginBottom: '1rem' }}>
-              <strong>{msg.sender}</strong> <small>{msg.time}</small>
-              <p>{msg.text}</p>
-            </div>
-          ))}
-        </div>
-
-        <input
-          type="text"
-          placeholder="Type a message..."
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-          style={{ width: '75%', padding: '8px' }}
+    <div
+      className={`h-screen flex flex-col sm:flex-row transition-colors duration-300 ${
+        theme === 'dark'
+          ? 'bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white'
+          : 'bg-gradient-to-br from-white via-slate-100 to-white text-gray-800'
+      }`}
+    >
+      {/* Sidebar (Animated Collapse) */}
+      <motion.div
+        initial={{ x: 0 }}
+        animate={{ x: sidebarOpen ? 0 : -300 }}
+        transition={{ duration: 0.3 }}
+        className="z-40 sm:relative fixed sm:translate-x-0"
+      >
+        <Sidebar
+          contacts={contacts}
+          activeChat={activeChat}
+          setActiveChat={(contact) => {
+            setActiveChat(contact);
+            setSidebarOpen(false);
+          }}
+          sidebarOpen={sidebarOpen}
         />
-        <button onClick={sendMessage} style={{ marginLeft: '10px', padding: '8px 12px' }}>
-          Send
-        </button>
+      </motion.div>
+
+      {/* Mobile Sidebar Toggle Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="absolute top-4 left-4 sm:hidden z-50 bg-white dark:bg-[#1e293b] p-2 rounded-full shadow-md"
+      >
+        <Menu className="w-5 h-5 text-gray-700 dark:text-white" />
+      </button>
+
+      {/* Chat Panel */}
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        {activeChat ? (
+          <>
+            <Header contact={activeChat} />
+            <div className="flex-1 bg-transparent">
+              <ChatRoom
+                currentUser={user.uid}
+                selectedUser={activeChat.uid}
+                selectedUserName={activeChat.name}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full px-4 text-center text-gray-400 dark:text-gray-500">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/9068/9068672.png"
+              alt="No chat selected"
+              className="w-24 h-24 mb-4 opacity-70"
+            />
+            <h2 className="text-xl font-semibold mb-2">No chat selected</h2>
+            <p className="text-sm">Please select a contact from the sidebar to start chatting.</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-export default ChatPage;

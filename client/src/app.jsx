@@ -1,10 +1,18 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from './context/UserContext';
+
 function App() {
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>Welcome to MSGIFY</h1>
-      <p>Real-time chat app powered by React + Vite</p>
-    </div>
-  );
+  const { user } = useUser();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user === undefined) return; // Still loading auth state
+    if (!user) navigate('/login');  // Redirect if not logged in
+    else navigate('/chat');         // Go to ChatPage if logged in
+  }, [user]);
+
+  return null; // No UI here, only redirection
 }
 
 export default App;
