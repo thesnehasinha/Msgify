@@ -1,10 +1,17 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from './context/UserContext';
+
 function App() {
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>Welcome to MSGIFY</h1>
-      <p>Real-time chat app powered by React + Vite</p>
-    </div>
-  );
+  const { user, loading } = useUser();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    navigate(user ? '/chat' : '/login');
+  }, [user, loading]);
+
+  return null;
 }
 
 export default App;
